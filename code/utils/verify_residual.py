@@ -9,7 +9,7 @@ import numpy as np
 
 
 def main():
-    path=Path(__file__).with_name('run_residual.py')
+    path=Path(__file__).with_name('residual_core.py')
     spec=importlib.util.spec_from_file_location('new_residual',path)
     m=importlib.util.module_from_spec(spec)
     sys.modules[spec.name]=m

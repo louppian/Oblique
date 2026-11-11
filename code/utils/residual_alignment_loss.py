@@ -56,19 +56,3 @@ class ResidualAlignmentLoss(nn.Module):
             similarity = (F.normalize(w, dim=-1)*self.target[disease_index]).sum(-1)
             weight = self.valid[disease_index].to(w.dtype)
             return ((1-similarity)*weight).sum()/weight.sum().clamp_min(1)
-
-
-if __name__ == '__main__':
-    # 외부 데이터 없이 loss의 정방향/역방향 및 gradient 전달을 확인한다.
-    z = torch.tensor([[1., 1., 2.], [1., 1., 3.], [1., 1., -2.], [1., 1., -3.]])
-    criterion = ResidualAlignmentLoss(z, torch.tensor([[1], [1], [0], [0]]), torch.tensor([1., 0., 0.]))
-    p = torch.tensor([[0., 0., 1.]])
-    index = torch.tensor([0])
-    torch.testing.assert_close(criterion(p, -p, index), torch.tensor(0.))
-    torch.testing.assert_close(criterion(-p, p, index), torch.tensor(2.))
-    p = torch.tensor([[1., 0., 1.]], requires_grad=True)
-    n = torch.tensor([[0., 1., -1.]], requires_grad=True)
-    criterion(p, n, index).backward()
-    assert torch.isfinite(p.grad).all() and p.grad.norm() > 0
-    assert torch.isfinite(n.grad).all() and n.grad.norm() > 0
-    print('정렬 loss 검증 통과: 정방향 0, 역방향 2, 양쪽 텍스트 gradient 전달')

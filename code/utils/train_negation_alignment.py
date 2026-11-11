@@ -359,7 +359,7 @@ def train():
     random.seed(cfg.seed); np.random.seed(cfg.seed); torch.manual_seed(cfg.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(cfg.seed)
-    out = cfg.root/'results'/'residual_alignment_training'/__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+    out = cfg.root/'cache'/'residual_alignment_training'/__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S_%f')
     out.mkdir(parents=True)
     (cfg.root/'cache').mkdir(parents=True, exist_ok=True)
     (out/'config.json').write_text(json.dumps(asdict(cfg), default=str, indent=2), encoding='utf-8')
@@ -424,7 +424,3 @@ def train():
         print(f'완료: {out}\n선택 epoch={checkpoint["epoch"]}, test AUC {baseline.auc.mean():.5f} → {after.auc.mean():.5f}', flush=True)
     finally:
         enc.close()
-
-
-if __name__ == '__main__':
-    train()

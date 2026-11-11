@@ -762,7 +762,3 @@ def main():
         for encoder in ctx._encoders.values():
             if hasattr(encoder, 'close'):
                 encoder.close()
-
-
-if __name__ == '__main__':
-    main()

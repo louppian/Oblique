@@ -1529,9 +1529,3 @@ def run_alignment(config=CONFIG,encoders=None,model_factory=None):
 
 _TRAINING_CALLBACKS=()
 EXPERIMENTS=(exp10_axis_alignment,exp11_mean_shift,exp12_alignment_training,exp13_bimcq_comparison)
-
-if __name__=='__main__':
-    # 4_residual.py에서 import할 때 같은 모듈을 두 번 로드하지 않는다.
-    import sys
-    sys.modules.setdefault('3_alignment',sys.modules[__name__])
-    run_alignment()

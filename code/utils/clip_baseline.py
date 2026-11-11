@@ -148,7 +148,3 @@ def main(config=CONFIG):
         print(f"Caption-image matching AUROC={result['caption_image_matching_AUROC']:.3f}")
     print(f"결과 폴더: {out}")
     return result
-
-
-if __name__ == "__main__":
-    main()

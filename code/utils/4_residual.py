@@ -328,6 +328,3 @@ def h1_exp4_residual_structure(snapshot, context, render=False):
 
 EXPERIMENTS = (h1_exp1_subspace_retrieval, h1_exp2_margin_decomposition,
                h1_exp3_pair_coordinates, h1_exp4_residual_structure)
-
-if __name__ == '__main__':
-    al.exp12_alignment_training(al.CONFIG)

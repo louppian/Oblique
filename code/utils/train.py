@@ -1,9 +1,18 @@
-"""Four residual experiments using u = alpha*rhat + beta*bhat + e_u + delta_u.
-Run this file directly; edit CONFIG below. No command-line arguments.
-The e axis is the leading PCA direction OUTSIDE the training rhat/bhat plane.
-Existing CLIP-only/conformity/imageness training and controls are retained.
-Outputs: one CSV and PNG per experiment, fitted only on training embeddings.
-Adapted from code/train.py. See README.md for definitions.
+"""H1: 전역 축과 잔차 구조의 검색 기여. CLI/JSON 설정·출력 없음.
+python h1_residual.py 로 실행하고 Config만 수정한다. COCO 원본 annotation JSON은 입력으로 읽는다.
+한 학습 패스의 에폭별 임베딩을 네 실험이 공유한다. 실험별 CSV 하나/PNG 하나만 저장한다.
+1) h1_exp1_subspace_retrieval: 축/평면/잔차 점수와 같은 차원 random/PCA 대조군.
+2) h1_exp2_margin_decomposition: M,V,A_e,U 마진, 현재/초기 경쟁 후보 비교.
+3) h1_exp3_pair_coordinates: C,c,h 정답 쌍과 이미지 단위 shuffle 비교.
+4) h1_exp4_residual_structure: 중심 갭/분산/유효 랭크/잔차 이웃·대응 보존.
+기본: COCO val 이미지 4000/1000 분할, 10 epochs, batch128, seeds0/1/2.
+CLIP-only와 conformity/imageness 축 로스(lambda0.100/1.000)를 동일 초기 가중치로 비교한다.
+학습 기준축·PCA는 학습 이미지/모든 학습 캡션으로 추정한다. 평가 이미지는 포함하지 않는다.
+노이즈 꼭지점은 같은 uniform RGB 1000장과 문자열500개/단어열500개로 매 에폭 재계산한다.
+초기 고정/현재 기준 평면을 함께 분석한다. float 출력 3자리, 내부 계산 원 정밀도.
+검색 rank는 동점 오답을 앞에 두는 보수적 규칙. 정답은 이미지에 연결된 모든 캡션.
+학습·데이터 진입부는 기존 train.py와 같은 방식이며, checkpoint/cache/JSON을 저장하지 않는다.
+필요 패키지: torch, torchvision, open_clip_torch, numpy, Pillow, matplotlib.
 """
 from __future__ import annotations
 from contextlib import nullcontext, contextmanager
@@ -25,9 +34,9 @@ torch = F = open_clip = None
 @dataclass(frozen=True)
 class Config:
     root: Path = ROOT
-    output_directory: Path | None = ROOT / 'results' / 'new_definition'
+    output_directory: Path | None = None
     model: str = 'ViT-B-32'
-    pretrained: str = str(next(iter(sorted((ROOT / 'ckpt').glob('**/open_clip_model.safetensors'))), ROOT / 'ckpt' / 'ViT-B-32.pt'))
+    pretrained: str = 'openai'
     device: str | None = None
     seeds: tuple[int, ...] = (0, 1, 2)
     epochs: int = 10
@@ -169,7 +178,6 @@ def make_loader(dataset, cfg, device, batch_size, shuffle=False, seed=0, trainin
     )
 
 def seed_worker(worker_id):
-    import torch
     seed = torch.initial_seed() % (2 ** 32)
     random.seed(seed)
     np.random.seed(seed)
@@ -374,49 +382,30 @@ def covariance(x):
 
 
 def fit_frame(z, t, ni, nt):
-    """Training-only estimates: rhat, bhat, leading outside-plane PCA axis."""
+    """실제 기준표본은 train. 평가표본은 축/PCA 추정에 사용하지 않는다."""
     z, t, ni, nt = (unit(x) for x in (z, t, ni, nt))
     frame = {}
     for modality, clean, noise in [('image', z, ni), ('text', t, nt)]:
         mu, nu = clean.mean(0), noise.mean(0)
         r, b = unit(mu), unit(nu)
-        gamma = float(r @ b)
-        if 1-gamma*gamma < 1e-10:
-            raise ValueError(f'{modality}: rhat/bhat need independent directions.')
-        q = basis([r, b])
-        if q.shape[1] != 2 or clean.shape[1] < 4:
-            raise ValueError('The four-term definition needs a rank-2 plane and d >= 4.')
-        outside = residual(clean, q)
-        values, vectors = np.linalg.eigh(covariance(outside))
-        if values[-1] <= 1e-12:
-            raise ValueError(f'{modality}: outside-plane variance is zero.')
-        e = unit(residual(vectors[:, -1], q))
-        e *= 1 if e[np.argmax(np.abs(e))] >= 0 else -1
-        dual = np.column_stack((r-gamma*b, b-gamma*r))/(1-gamma*gamma)
-        ell = float(np.linalg.norm(r-b))
-        frame[modality] = dict(mu=mu, r=r, b=b, e=e, q=q,
-            q3=np.column_stack((q, e)), dual=dual, a=(r-b)/ell, ell=ell,
-            R=float(np.linalg.norm(mu)), Rb=float(np.linalg.norm(nu)),
-            e_eigenvalue=float(values[-1]), e_eigengap=float(values[-1]-values[-2]),
-            e_variance_fraction=float(values[-1]/np.maximum(values, 0).sum()))
-    # A common sign convention for image/text signed coordinates; projections are sign invariant.
-    if frame['image']['e'] @ frame['text']['e'] < 0:
-        frame['text']['e'] *= -1
-        frame['text']['q3'][:, -1] *= -1
-    i, f = frame['image'], frame['text']
+        ell = float(np.linalg.norm(r - b))
+        if ell <= EPS:
+            raise ValueError(f'{modality}: 노이즈점과 평균 방향이 같아 축이 정의되지 않습니다.')
+        e = unit(r - float(r @ b) * b, allow_zero=True)
+        frame[modality] = dict(mu=mu, r=r, b=b, a=(r-b)/ell, e=e,
+                               R=float(np.linalg.norm(mu)), Rb=float(np.linalg.norm(nu)), ell=ell)
+    i, tframe = frame['image'], frame['text']
     frame['spaces'] = {
-        'conformity': basis([i['r'], f['r']]),
-        'imageness': basis([i['a'], f['a']]),
-        'noise': basis([i['b'], f['b']]),
-        'image_cone': i['q'], 'text_cone': f['q'],
-        'joint_cone': basis([i['r'], i['b'], f['r'], f['b']]),
-        'image_e': i['e'][:, None], 'text_e': f['e'][:, None],
-        'joint_e': basis([i['e'], f['e']]),
-        'image_plane_e': i['q3'], 'text_plane_e': f['q3'],
-        'joint_plane_e': basis([i['r'], i['b'], i['e'], f['r'], f['b'], f['e']]),
+        'conformity': basis([i['r'], tframe['r']]),
+        'imageness': basis([i['a'], tframe['a']]),
+        'image_cone': basis([i['b'], i['r']]),
+        'text_cone': basis([tframe['b'], tframe['r']]),
+        'joint_cone': basis([i['b'], i['r'], tframe['b'], tframe['r']]),
     }
-    values, vectors = np.linalg.eigh((covariance(z)+covariance(t))/2)
-    frame['pca'] = vectors[:, np.argsort(values)[::-1]]
+    # 모달리티를 같은 가중치로 두고 각 모달리티 평균을 제거한 PCA.
+    cov = (covariance(z) + covariance(t)) / 2
+    eigenvalues, eigenvectors = np.linalg.eigh(cov)
+    frame['pca'] = eigenvectors[:, np.argsort(eigenvalues)[::-1]]
     return frame
 
 
@@ -526,7 +515,7 @@ COMMON_COLUMNS = ['record_type', 'run_id', 'seed', 'method', 'lambda_axis', 'epo
                   'n_optimizer_updates', 'train_loss_clip', 'train_loss_axis', 'train_loss',
                   'anchor_refreshes_per_epoch', 'model', 'pretrained','n_epochs_config',
                   'learning_rate_reciprocal','weight_decay','warmup_fraction','skipped_amp_steps',
-                  'n_geometry_image_noise','n_geometry_text_noise','split_seed','decomposition_definition','e_estimator']
+                  'n_geometry_image_noise','n_geometry_text_noise','split_seed']
 RETRIEVAL_COLUMNS = [f'{d}_{k}' for d in ('i2t', 't2i') for k in
                      ('R1_percent','R5_percent','R10_percent','median_rank','margin_mean','AUROC_percent')]
 GEOMETRY_COLUMNS = ['conformity_cosine','imageness_textness_cosine','conformity_angle_deg',
@@ -545,7 +534,7 @@ class OutputTable:
         self.summaries = []
 
     def append(self, row):
-        self.writer.writerow({key: (f'{float(value):.9g}' if np.isfinite(value) else '')
+        self.writer.writerow({key: (f'{float(value):.3f}' if np.isfinite(value) else '')
                               if isinstance(value, (float, np.floating)) else value
                               for key, value in row.items()})
         if row.get('record_type') != 'query':
@@ -592,7 +581,7 @@ class AnalysisContext:
             yield mode, self.initial.frame if mode == 'initial_fixed' else snapshot.frame
 
     def meta(self, snapshot, mode='epoch_current'):
-        return dict(**snapshot.metadata, reference_mode=mode, reference_source='training_images_and_captions', decomposition_definition='oblique_rhat_bhat_outside_e_delta', e_estimator='training_residual_PCA1')
+        return dict(**snapshot.metadata, reference_mode=mode, reference_source='training_images_and_captions')
 
     def random_basis(self, dimension, rank, trial):
         key = dimension, rank, trial
@@ -654,71 +643,83 @@ def plot_curves(ax, rows, key, title, predicate=lambda r: True):
 
 
 def h1_exp1_subspace_retrieval(snapshot, context, render=False):
-    """Four component scores plus rank-matched subspace/random/PCA retrieval."""
+    """H1-1. 축/평면과 잔차의 raw dot/cosine 검색; rank-matched random/PCA 대조."""
     extra = ['subspace', 'control_trial', 'subspace_rank', 'score_variant',
              'zero_image_rows', 'zero_text_rows', 'valid_score', 'score_reconstruction_max_error']
-    table = context.table('h1_exp1_subspace_retrieval', extra+RETRIEVAL_COLUMNS)
+    table = context.table('h1_exp1_subspace_retrieval', extra + RETRIEVAL_COLUMNS)
     for mode, frame in context.frames(snapshot):
         meta = context.meta(snapshot, mode)
-        def append(name, rank, variant, score, trial=-1, error=0., zero_i=0, zero_t=0):
-            row = dict(**meta, record_type='summary', subspace=name, control_trial=trial,
-                subspace_rank=rank, score_variant=variant, zero_image_rows=zero_i,
-                zero_text_rows=zero_t, valid_score=score is not None,
-                score_reconstruction_max_error=error)
-            if score is not None:
-                row.update(retrieval_summary(query_stats(score, snapshot.mapping)))
-            table.append(row)
-        append('full', snapshot.z.shape[1], 'original', snapshot.scores)
-        parts = components(snapshot.z, frame['image'])
-        reconstructed = sum(parts.values()) @ snapshot.t.T
-        error = float(np.max(np.abs(snapshot.scores-reconstructed)))
-        if error > 1e-8:
-            raise AssertionError('Component retrieval scores failed reconstruction.')
-        del reconstructed
-        for name, part in parts.items():
-            append(name, snapshot.z.shape[1]-3 if name=='Delta' else 1,
-                   'component_raw_image_basis', part @ snapshot.t.T, error=error)
+        metrics = retrieval_summary(query_stats(snapshot.scores, snapshot.mapping))
+        table.append(dict(**meta, record_type='summary', subspace='full', control_trial=-1,
+                          subspace_rank=snapshot.z.shape[1], score_variant='original',
+                          zero_image_rows=0, zero_text_rows=0, valid_score=True,
+                          score_reconstruction_max_error=0.000, **metrics))
         spaces = [(name, -1, q) for name, q in frame['spaces'].items()]
+        # 각 실제 부분공간의 rank에 맞춘 대조군. 2차원/4차원을 섞어 비교하지 않는다.
         for rank in sorted({q.shape[1] for q in frame['spaces'].values()}):
             spaces.append(('pca_rank_matched', -1, frame['pca'][:, :rank]))
-            spaces.extend(('random_rank_matched', trial,
-                context.random_basis(snapshot.z.shape[1], rank, trial))
-                for trial in range(context.cfg.random_subspace_repeats))
+            spaces.extend(('random_rank_matched', trial, context.random_basis(snapshot.z.shape[1], rank, trial))
+                          for trial in range(context.cfg.random_subspace_repeats))
         for name, trial, q in spaces:
-            inside = (snapshot.z @ q) @ (snapshot.t @ q).T
-            outside = snapshot.scores-inside
+            zi, ti = snapshot.z @ q, snapshot.t @ q
+            plane = snapshot.scores.copy() if q.shape[1]==snapshot.z.shape[1] else zi @ ti.T
+            outside = snapshot.scores - plane
             nz = np.linalg.norm(residual(snapshot.z, q), axis=1)
             nt = np.linalg.norm(residual(snapshot.t, q), axis=1)
-            error = float(np.max(np.abs(inside+outside-snapshot.scores)))
-            append(name, q.shape[1], 'plane_raw', inside, trial, error)
-            append(name, q.shape[1], 'residual_raw', outside, trial, error)
-            valid = np.all(nz>EPS) and np.all(nt>EPS)
-            score = outside/(nz[:, None]*nt[None, :]) if valid else None
-            append(name, q.shape[1], 'residual_cosine', score, trial, error,
-                   int((nz<=EPS).sum()), int((nt<=EPS).sum()))
+            for variant, score in [('plane_raw', plane), ('residual_raw', outside),
+                                   ('residual_cosine', None)]:
+                valid = variant != 'residual_cosine' or (np.all(nz > EPS) and np.all(nt > EPS))
+                if variant == 'residual_cosine' and valid:
+                    score = outside / (nz[:, None]*nt[None, :])
+                row = dict(**meta, record_type='summary', subspace=name, control_trial=trial,
+                           subspace_rank=q.shape[1], score_variant=variant,
+                           zero_image_rows=int((nz <= EPS).sum()), zero_text_rows=int((nt <= EPS).sum()),
+                           valid_score=bool(valid), score_reconstruction_max_error=float(np.max(np.abs(plane+outside-snapshot.scores))))
+                if valid:
+                    row.update(retrieval_summary(query_stats(score, snapshot.mapping)))
+                table.append(row)
     table.flush()
     if render:
         fig, axes = make_figure()
-        for j, direction in enumerate(('i2t', 't2i')):
-            pred=lambda r: r['reference_mode']=='epoch_current' and r['subspace']=='Delta' and r['score_variant']=='component_raw_image_basis'
-            plot_curves(axes[0,j],table.summaries,f'{direction}_R1_percent',f'{direction.upper()}: Delta only',pred)
-            pred=lambda r: r['reference_mode']=='epoch_current' and r['subspace']=='joint_plane_e' and r['score_variant']=='residual_cosine'
-            plot_curves(axes[1,j],table.summaries,f'{direction}_R1_percent',f'{direction.upper()}: joint plane + e removed',pred)
-        fig.suptitle('H1-1: rhat / bhat / outside-plane e / Delta retrieval')
-        save_figure(fig,table.png)
-    return table.path,table.png
+        for ax, direction in zip(axes[0], ('i2t','t2i')):
+            joint_ranks={(r['run_id'],r['epoch']):r['subspace_rank'] for r in table.summaries
+                         if r['reference_mode']=='epoch_current' and r['subspace']=='joint_cone'}
+            final = [r for r in table.summaries if r['epoch'] == context.cfg.epochs and
+                     r['reference_mode'] == 'epoch_current' and r['score_variant'] in ('original','residual_cosine') and
+                     r['subspace'] in ('full','joint_cone','random_rank_matched','pca_rank_matched') and r['valid_score'] and
+                     (r['subspace'] in ('full','joint_cone') or r['subspace_rank']==joint_ranks[(r['run_id'],r['epoch'])])]
+            names = list(dict.fromkeys(label(r) for r in final))
+            variants = ['full','joint_cone','random_rank_matched','pca_rank_matched']
+            width = 0.8/max(len(names),1)
+            for j, run in enumerate(names):
+                means = [np.mean([r[f'{direction}_R1_percent'] for r in final if label(r)==run and r['subspace']==v]) for v in variants]
+                ax.bar(np.arange(4)-0.4+width/2+j*width, means, width, label=run)
+            ax.set_xticks(range(4), ['Original','Cone residual','Random residual','PCA residual'], rotation=15)
+            ax.set(title=f'{direction.upper()}: final R@1', ylabel='Recall (%)')
+            if names: ax.legend(fontsize=7)
+        predicate = lambda r: r['reference_mode']=='epoch_current' and r['subspace']=='joint_cone' and r['score_variant']=='residual_raw'
+        plot_curves(axes[1,0],table.summaries,'i2t_R1_percent','I2T: raw residual',predicate)
+        plot_curves(axes[1,1],table.summaries,'t2i_R1_percent','T2I: raw residual',predicate)
+        fig.suptitle('H1-1: retrieval in the cone subspace and its complement')
+        save_figure(fig, table.png)
+    return table.path, table.png
 
 
 def pair_terms(z, t, image_indices, text_indices, frame):
-    """Four exact score terms using the IMAGE reference for every candidate pair."""
     zi, ti = z[image_indices], t[text_indices]
-    parts = components(zi, frame['image'])
-    terms = {key: np.einsum('ij,ij->i', value, ti) for key, value in parts.items()}
-    direct = np.einsum('ij,ij->i', zi, ti)
-    error = np.abs(direct-sum(terms.values()))
-    if np.max(error) > 1e-8:
-        raise AssertionError(f'Four-term score reconstruction: {np.max(error):.3g}')
-    return dict(**terms, full=direct, reconstruction_error=error)
+    f = frame['image']
+    delta = zi-f['mu']
+    m = ti @ f['mu']
+    v = (delta @ f['b'])*(ti @ f['b'])
+    a = (delta @ f['e'])*(ti @ f['e'])
+    # U를 독립적으로 계산해서 reconstruction을 검사한다.
+    q = frame['spaces']['image_cone']
+    u = np.sum(residual(delta, q)*residual(ti, q), axis=1)
+    direct = np.sum(zi*ti,axis=1)
+    error = np.abs(direct-m-v-a-u)
+    if error.max() > 0.00001:
+        raise AssertionError(f'네 항 재구성 오류: {error.max():.3f}')
+    return dict(M=m, V=v, A_e=a, U=u, full=direct, reconstruction_error=error)
 
 
 def selected_pair_margins(snapshot, query, direction, frame):
@@ -729,17 +730,17 @@ def selected_pair_margins(snapshot, query, direction, frame):
     else:
         p = pair_terms(snapshot.z,snapshot.t,query['positive'],rows,frame)
         n = pair_terms(snapshot.z,snapshot.t,query['negative'],rows,frame)
-    return {key: p[key]-n[key] for key in ('Rhat','Bhat','E','Delta','full')}
+    return {key: p[key]-n[key] for key in ('M','V','A_e','U','full')}
 
 
 def h1_exp2_margin_decomposition(snapshot, context, render=False):
-    """H1-2. 현재 hard negative와 초기 고정 후보의 Rhat/Bhat/E/Delta 마진 및 변화."""
-    terms = ('Rhat','Bhat','E','Delta','full')
+    """H1-2. 현재 hard negative와 초기 고정 후보의 M/V/A_e/U 마진 및 변화."""
+    terms = ('M','V','A_e','U','full')
     extra = ['direction','candidate_policy','status','n_queries','query_id','positive_candidate_id',
              'negative_candidate_id','initial_correct','current_correct','initial_rank','current_rank',
-             'reconstruction_max_error','Delta_full_margin_pearson','matched_clip_rank','matched_clip_correct',
+             'reconstruction_max_error','U_full_margin_pearson','matched_clip_rank','matched_clip_correct',
              'status_vs_clip_only','matched_clip_margin_available','matched_clip_full_margin',
-             'matched_clip_Delta_margin','delta_full_vs_clip_only','delta_Delta_vs_clip_only']
+             'matched_clip_U_margin','delta_full_vs_clip_only','delta_U_vs_clip_only']
     extra += [f'{term}_margin' for term in terms]+[f'delta_{term}_margin' for term in terms]
     table = context.table('h1_exp2_margin_decomposition', extra)
     current = query_stats(snapshot.scores,snapshot.mapping)
@@ -768,6 +769,8 @@ def h1_exp2_margin_decomposition(snapshot, context, render=False):
                 # 자체 current-hard 후보는 CLIP 대조군의 후보와 달라 직접 차감하지 않는다.
                 clip_margins=context.clip_margins.get(key) if policy!='current_hard_negative' or is_control else None
                 error = float(np.max(np.abs(margins['full']-sum(margins[k] for k in terms[:-1]))))
+                if direction=='t2i' and np.max(np.abs(margins['M'])) > EPS:
+                    raise AssertionError('텍스트 고정 검색에서 M 상쇄가 실패했습니다.')
                 meta = dict(**context.meta(snapshot,mode),direction=direction,candidate_policy=policy)
                 groups=['all','retained','lost','gained','still_wrong']
                 if status_clip is not None:groups+=['retained_vs_clip','lost_vs_clip','gained_vs_clip','still_wrong_vs_clip']
@@ -775,16 +778,16 @@ def h1_exp2_margin_decomposition(snapshot, context, render=False):
                     mask = np.ones(len(status),bool) if group=='all' else status_clip==group if group.endswith('_vs_clip') else status==group
                     if not mask.any(): continue
                     row = dict(**meta,record_type='summary',status=group,n_queries=int(mask.sum()),
-                               reconstruction_max_error=error,Delta_full_margin_pearson=weighted_pearson(margins['Delta'][mask],margins['full'][mask]))
+                               reconstruction_max_error=error,U_full_margin_pearson=weighted_pearson(margins['U'][mask],margins['full'][mask]))
                     for term in terms:
                         row[f'{term}_margin']=float(margins[term][mask].mean())
                         row[f'delta_{term}_margin']=float((margins[term]-old[term])[mask].mean())
                     row['matched_clip_margin_available']=clip_margins is not None
                     if clip_margins is not None:
                         row.update(matched_clip_full_margin=float(clip_margins['full'][mask].mean()),
-                                   matched_clip_Delta_margin=float(clip_margins['Delta'][mask].mean()),
+                                   matched_clip_U_margin=float(clip_margins['U'][mask].mean()),
                                    delta_full_vs_clip_only=float((margins['full']-clip_margins['full'])[mask].mean()),
-                                   delta_Delta_vs_clip_only=float((margins['Delta']-clip_margins['Delta'])[mask].mean()))
+                                   delta_U_vs_clip_only=float((margins['U']-clip_margins['U'])[mask].mean()))
                     table.append(row)
                 if snapshot.metadata['epoch'] in context.cfg.query_detail_epochs:
                     query_ids = snapshot.image_ids if direction=='i2t' else snapshot.caption_ids
@@ -803,18 +806,18 @@ def h1_exp2_margin_decomposition(snapshot, context, render=False):
                             row.update(matched_clip_rank=int(clipq['ranks'][j]),matched_clip_correct=bool(clipq['ranks'][j]==1),
                                        status_vs_clip_only=status_clip[j])
                         if clip_margins is not None:
-                            row.update(matched_clip_full_margin=float(clip_margins['full'][j]),matched_clip_Delta_margin=float(clip_margins['Delta'][j]),
+                            row.update(matched_clip_full_margin=float(clip_margins['full'][j]),matched_clip_U_margin=float(clip_margins['U'][j]),
                                        delta_full_vs_clip_only=float(margins['full'][j]-clip_margins['full'][j]),
-                                       delta_Delta_vs_clip_only=float(margins['Delta'][j]-clip_margins['Delta'][j]))
+                                       delta_U_vs_clip_only=float(margins['U'][j]-clip_margins['U'][j]))
                         table.append(row)
     table.flush()
     if render:
         fig,axes=make_figure()
         for j,direction in enumerate(('i2t','t2i')):
             predicate=lambda r,d=direction:r['reference_mode']=='initial_fixed' and r['direction']==d and r['candidate_policy']=='initial_fixed_candidates' and r['status']=='all'
-            plot_curves(axes[0,j],table.summaries,'delta_Delta_margin',f'{direction.upper()}: residual margin change',predicate)
+            plot_curves(axes[0,j],table.summaries,'delta_U_margin',f'{direction.upper()}: residual margin change',predicate)
             predicate=lambda r,d=direction:r['reference_mode']=='initial_fixed' and r['direction']==d and r['candidate_policy']=='clip_only_fixed_candidates' and r['status']=='lost_vs_clip'
-            plot_curves(axes[1,j],table.summaries,'delta_Delta_vs_clip_only',f'{direction.upper()}: lost versus matched CLIP',predicate)
+            plot_curves(axes[1,j],table.summaries,'delta_U_vs_clip_only',f'{direction.upper()}: lost versus matched CLIP',predicate)
             axes[0,j].axhline(0,color='black',linewidth=0.8)
             axes[1,j].axhline(0,color='black',linewidth=0.8)
         fig.suptitle('H1-2: separate changing competitors from fixed-pair deformation')
@@ -822,16 +825,11 @@ def h1_exp2_margin_decomposition(snapshot, context, render=False):
     return table.path,table.png
 
 
-def coordinate(x, frame, kind):
+def coordinate(x,frame,kind):
     c=x @ frame['r']
     if kind=='c': return c
     if kind=='C': return frame['R']*c
-    if kind=='h': return ((x-frame['b']) @ frame['a'])/frame['ell']
-    if kind=='alpha': return (x @ frame['dual'])[:,0]
-    if kind=='beta': return (x @ frame['dual'])[:,1]
-    if kind=='e_norm': return np.abs(x @ frame['e'])
-    if kind=='delta_norm': return np.linalg.norm(residual(x,frame['q3']),axis=1)
-    raise ValueError(kind)
+    return ((x-frame['b']) @ frame['a'])/frame['ell']
 
 
 def h1_exp3_pair_coordinates(snapshot, context, render=False):
@@ -845,7 +843,7 @@ def h1_exp3_pair_coordinates(snapshot, context, render=False):
     weights=1/np.bincount(snapshot.mapping,minlength=n)[snapshot.mapping]
     weights=weights/weights.sum()
     for mode,frame in context.frames(snapshot):
-        for kind in ('C','c','h','alpha','beta','e_norm','delta_norm'):
+        for kind in ('C','c','h'):
             xi=coordinate(snapshot.z,frame['image'],kind)
             xt=coordinate(snapshot.t,frame['text'],kind)
             paired=xi[snapshot.mapping]
@@ -869,7 +867,7 @@ def h1_exp3_pair_coordinates(snapshot, context, render=False):
     table.flush()
     if render:
         fig,axes=make_figure()
-        for j,kind in enumerate(('alpha','e_norm')):
+        for j,kind in enumerate(('c','h')):
             predicate=lambda r,k=kind:r['reference_mode']=='epoch_current' and r['coordinate']==k
             plot_curves(axes[0,j],table.summaries,'paired_pearson',f'{kind}: positive-pair correlation',predicate)
             plot_curves(axes[1,j],table.summaries,'shuffle_advantage',f'{kind}: shuffled MSE - paired MSE',predicate)
@@ -880,71 +878,60 @@ def h1_exp3_pair_coordinates(snapshot, context, render=False):
 
 
 def h1_exp4_residual_structure(snapshot, context, render=False):
-    """Oblique R/B covariance, outside-plane e variance and remaining Delta structure."""
-    columns=['modality','plane_rank','delta_dimension','total_variance','plane_variance',
-        'Rhat_variance','Bhat_variance','Rhat_Bhat_covariance','E_variance','Delta_variance',
-        'variance_reconstruction_error','embedding_reconstruction_max_error',
-        'e_plane_dot_max','delta_axis_dot_max','e_eigenvalue_train','e_eigengap_train',
-        'e_variance_fraction_train','centered_effective_rank','centered_participation_ratio',
-        'Delta_effective_rank','Delta_participation_ratio','Delta_direction_cosine_to_initial',
-        'Delta_neighbor_overlap_to_initial','neighbor_k','i2t_failure_fraction','t2i_failure_fraction']
-    table=context.table('h1_exp4_residual_structure',columns+GEOMETRY_COLUMNS+RETRIEVAL_COLUMNS)
-    qs=query_stats(snapshot.scores,snapshot.mapping)
-    metrics=retrieval_summary(qs)
+    """H1-4. 기하/평면·잔차 분산/중심화 effective rank/초기 잔차 이웃 보존."""
+    structural=['modality','joint_subspace_rank','total_variance','plane_variance','residual_variance',
+                'plane_variance_fraction','axis_parallel_variance','axis_perpendicular_variance',
+                'centered_effective_rank','centered_participation_ratio','residual_effective_rank',
+                'residual_participation_ratio','residual_direction_cosine_to_initial',
+                'residual_neighbor_overlap_to_initial','neighbor_k','i2t_failure_fraction','t2i_failure_fraction']
+    table=context.table('h1_exp4_residual_structure',structural+GEOMETRY_COLUMNS+RETRIEVAL_COLUMNS)
+    qstats=query_stats(snapshot.scores,snapshot.mapping)
+    metrics=retrieval_summary(qstats)
     geom=geometry(snapshot.z,snapshot.t,snapshot.frame)
-    pooled=text_per_image(snapshot.t,snapshot.mapping,len(snapshot.z))
-    base_pooled=text_per_image(context.initial.t,context.initial.mapping,len(context.initial.z))
+    pooled_t=text_per_image(snapshot.t,snapshot.mapping,len(snapshot.z))
+    baseline_t=text_per_image(context.initial.t,context.initial.mapping,len(context.initial.z))
     for mode,frame in context.frames(snapshot):
-        for modality,x,base,nx,nb in (
+        q=frame['spaces']['joint_cone']
+        for modality,x,base,neighbors_x,neighbors_base in (
             ('image',snapshot.z,context.initial.z,snapshot.z,context.initial.z),
-            ('text',snapshot.t,context.initial.t,pooled,base_pooled)):
-            f=frame[modality]
-            parts=components(x,f)
-            error=float(np.max(np.abs(x-sum(parts.values()))))
-            centered={k:v-v.mean(0) for k,v in parts.items()}
-            variances={k:float(np.mean(np.sum(v*v,axis=1))) for k,v in centered.items()}
-            cross=float(np.mean(np.einsum('ij,ij->i',centered['Rhat'],centered['Bhat'])))
+            ('text',snapshot.t,context.initial.t,pooled_t,baseline_t)):
             cov=covariance(x)
-            var=float(np.trace(cov))
-            plane_var=variances['Rhat']+variances['Bhat']+2*cross
-            verr=abs(var-plane_var-variances['E']-variances['Delta'])
-            dot=float(np.max(np.abs(parts['Delta'] @ f['q3'])))
-            if max(error,verr,dot)>1e-8:
-                raise AssertionError('Four-term embedding/variance/orthogonality verification failed.')
-            spectral=spectral_stats(cov)
-            rspectral=spectral_stats(covariance(parts['Delta']))
-            fixed=context.initial.frame[modality]['q3']
-            cur=unit(residual(x,fixed),allow_zero=True)
-            old=unit(residual(base,fixed),allow_zero=True)
-            good=(np.linalg.norm(cur,axis=1)>EPS)&(np.linalg.norm(old,axis=1)>EPS)
-            drift=float(np.einsum('ij,ij->i',cur[good],old[good]).mean()) if good.any() else float('nan')
-            # Both epochs use the same selected reference; rows identify fixed/current mode.
-            nn=nearest_neighbors(residual(nx,f['q3']),context.cfg.neighbor_k)
-            original=nearest_neighbors(residual(nb,f['q3']),context.cfg.neighbor_k)
-            table.append(dict(**context.meta(snapshot,mode),record_type='summary',modality=modality,
-                plane_rank=f['q'].shape[1],delta_dimension=x.shape[1]-3,
-                total_variance=var,plane_variance=plane_var,Rhat_variance=variances['Rhat'],
-                Bhat_variance=variances['Bhat'],Rhat_Bhat_covariance=cross,
-                E_variance=variances['E'],Delta_variance=variances['Delta'],
-                variance_reconstruction_error=verr,embedding_reconstruction_max_error=error,
-                e_plane_dot_max=float(np.max(np.abs(f['q'].T @ f['e']))),delta_axis_dot_max=dot,
-                e_eigenvalue_train=f['e_eigenvalue'],e_eigengap_train=f['e_eigengap'],
-                e_variance_fraction_train=f['e_variance_fraction'],
-                centered_effective_rank=spectral['effective_rank'],centered_participation_ratio=spectral['participation_ratio'],
-                Delta_effective_rank=rspectral['effective_rank'],Delta_participation_ratio=rspectral['participation_ratio'],
-                Delta_direction_cosine_to_initial=drift,Delta_neighbor_overlap_to_initial=neighbor_overlap(nn,original),
-                neighbor_k=min(context.cfg.neighbor_k,len(snapshot.z)-1),
-                i2t_failure_fraction=float(np.mean(qs['i2t']['ranks']>1)),
-                t2i_failure_fraction=float(np.mean(qs['t2i']['ranks']>1)),**geom,**metrics))
+            projection=q @ q.T
+            residual_cov=cov-projection @ cov-cov @ projection+projection @ cov @ projection
+            var=float(np.trace(cov));plane_var=float(np.trace(q.T @ cov @ q))
+            spectral=spectral_stats(cov);rspectral=spectral_stats(residual_cov)
+            a=frame[modality]['a'];parallel=float(a @ cov @ a)
+            # 잔차 방향 변화는 두 시점에 동일한 초기 기준 평면을 적용해 측정한다.
+            fixed_q=context.initial.frame['spaces']['joint_cone']
+            cur_fixed=unit(residual(x,fixed_q),allow_zero=True)
+            base_fixed=unit(residual(base,fixed_q),allow_zero=True)
+            good=(np.linalg.norm(cur_fixed,axis=1)>EPS)&(np.linalg.norm(base_fixed,axis=1)>EPS)
+            drift=float(np.sum(cur_fixed[good]*base_fixed[good],axis=1).mean()) if good.any() else float('nan')
+            # 현재 평면을 쓰는 이웃 비교도 두 시점에 같은 평면을 적용한다.
+            nn=nearest_neighbors(residual(neighbors_x,q),context.cfg.neighbor_k)
+            original_nn=nearest_neighbors(residual(neighbors_base,q),context.cfg.neighbor_k)
+            row=dict(**context.meta(snapshot,mode),record_type='summary',modality=modality,
+                     joint_subspace_rank=q.shape[1],total_variance=var,plane_variance=plane_var,
+                     residual_variance=float(np.trace(residual_cov)),plane_variance_fraction=plane_var/var if var>EPS else float('nan'),
+                     axis_parallel_variance=parallel,axis_perpendicular_variance=var-parallel,
+                     centered_effective_rank=spectral['effective_rank'],centered_participation_ratio=spectral['participation_ratio'],
+                     residual_effective_rank=rspectral['effective_rank'],residual_participation_ratio=rspectral['participation_ratio'],
+                     residual_direction_cosine_to_initial=drift,residual_neighbor_overlap_to_initial=neighbor_overlap(nn,original_nn),
+                     neighbor_k=min(context.cfg.neighbor_k,len(snapshot.z)-1),
+                     i2t_failure_fraction=float(np.mean(qstats['i2t']['ranks']>1)),
+                     t2i_failure_fraction=float(np.mean(qstats['t2i']['ranks']>1)),**geom,**metrics)
+            if abs(var-(1-np.linalg.norm(x.mean(0))**2)) > 0.00001:
+                raise AssertionError('단위 임베딩의 분산 항등식이 실패했습니다.')
+            table.append(row)
     table.flush()
     if render:
         fig,axes=make_figure()
         for j,modality in enumerate(('image','text')):
-            pred=lambda r,m=modality:r['reference_mode']=='initial_fixed' and r['modality']==m
-            plot_curves(axes[0,j],table.summaries,'Delta_effective_rank',f'{modality}: Delta effective rank',pred)
-            plot_curves(axes[1,j],table.summaries,'Delta_neighbor_overlap_to_initial',f'{modality}: Delta neighbor retention',pred)
-            axes[1,j].set_ylim(0,1.05)
-        fig.suptitle('H1-4: outside-plane PCA component and remaining Delta')
+            predicate=lambda r,m=modality:r['reference_mode']=='initial_fixed' and r['modality']==m
+            plot_curves(axes[0,j],table.summaries,'residual_effective_rank',f'{modality}: centered residual effective rank',predicate)
+            plot_curves(axes[1,j],table.summaries,'residual_neighbor_overlap_to_initial',f'{modality}: residual neighbor retention',predicate)
+            axes[1,j].set_ylim(0,1.050)
+        fig.suptitle('H1-4: preserve the initial reference when measuring residual deformation')
         save_figure(fig,table.png)
     return table.path,table.png
 
@@ -1030,7 +1017,7 @@ def run_training(model,initial_state,initial,context,train,evaluation,preprocess
         loader=make_loader(PairDataset(train,preprocess_train,tokenizer(texts)),cfg,device,batch_size,
                            shuffle=True,seed=seed*100000+epoch,training=True)
         model.train()
-        loss_sums=torch.zeros(3,device=device)
+        clip_sum=axis_sum=total_sum=0.000
         seen=skipped=0
         for step,(images,tokens) in enumerate(loader,1):
             lr=lr_at_step(global_step,total_steps,cfg.warmup_fraction,1/cfg.learning_rate_reciprocal)
@@ -1054,14 +1041,15 @@ def run_training(model,initial_state,initial,context,train,evaluation,preprocess
             skipped+=optimizer_step(model,optimizer,scaler,cfg,amp_enabled)
             count=len(images)
             seen+=count;global_step+=1
-            loss_sums+=torch.stack((lc.detach(),la.detach(),loss.detach()))*count
+            clip_sum+=float(lc.detach())*count
+            axis_sum+=float(la.detach())*count
+            total_sum+=float(loss.detach())*count
             if step%cfg.log_every_steps==0 or step==n_batches:
                 print(f'  batch={step}/{n_batches} CLIP={float(lc.detach()):.3f} '
                       f'axis={float(la.detach()):.3f}',flush=True)
-        clip_sum,axis_sum,total_sum=(loss_sums/seen).cpu().tolist()
         meta=metadata_for(cfg,train,evaluation,seed,method,weight,epoch,
-                          n_optimizer_updates=n_batches-skipped,skipped_amp_steps=skipped,train_loss_clip=clip_sum,
-                          train_loss_axis=axis_sum,train_loss=total_sum)
+                          n_optimizer_updates=n_batches-skipped,skipped_amp_steps=skipped,train_loss_clip=clip_sum/seen,
+                          train_loss_axis=axis_sum/seen,train_loss=total_sum/seen)
         snapshot=encode_snapshot(model,train,evaluation,preprocess_eval,tokenizer,cfg,device,meta)
         for experiment in EXPERIMENTS:
             experiment(snapshot,context,render=(epoch==cfg.epochs))
@@ -1101,13 +1089,13 @@ def main(config=CONFIG,model_factory=None):
     train,evaluation,_,protocol=load_splits(config)
     if len(evaluation)<2:
         raise ValueError('검색 평가에는 이미지가 두 장 이상 필요합니다.')
-    output=config.output_directory or config.root/'results'/'new_definition'
+    output=config.output_directory or config.root/'results'/'h1_residual'/datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
     output=Path(output)
-    output.mkdir(parents=True,exist_ok=True)
+    output.mkdir(parents=True,exist_ok=False)
     seed_everything(config.seeds[0])
     if model_factory is None:
         model,preprocess_train,preprocess_eval=open_clip.create_model_and_transforms(
-            config.model,pretrained=config.pretrained,precision='fp32',force_quick_gelu=True,cache_dir=str(config.root/'ckpt'))
+            config.model,pretrained=config.pretrained,precision='fp32',cache_dir=str(config.root / 'ckpt'))
         tokenizer=open_clip.get_tokenizer(config.model)
     else:
         model,preprocess_train,preprocess_eval,tokenizer=model_factory(config)
@@ -1134,18 +1122,3 @@ def main(config=CONFIG,model_factory=None):
         raise AssertionError(f'예상 출력 파일 수와 다릅니다: {sorted(actual)}')
     print(f'완료: {output} (실험별 CSV/PNG 각 하나)',flush=True)
     return output
-
-
-
-
-def components(x, f):
-    """u = alpha*rhat + beta*bhat + projection_on_e + delta (no centering)."""
-    coefficients = np.asarray(x) @ f['dual']
-    r = coefficients[..., 0, None]*f['r']
-    b = coefficients[..., 1, None]*f['b']
-    e = (np.asarray(x) @ f['e'])[..., None]*f['e']
-    delta = np.asarray(x)-r-b-e
-    return dict(Rhat=r, Bhat=b, E=e, Delta=delta)
-
-if __name__ == '__main__':
-    main()

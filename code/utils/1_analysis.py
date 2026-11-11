@@ -389,7 +389,7 @@ class ClipEncoder:
         self.torch, self.cfg = torch, cfg
         self.device = cfg.device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(
-            cfg.clip_model, pretrained=cfg.clip_pretrained, cache_dir=str(cfg.root / 'ckpt'))
+            cfg.clip_model, pretrained=cfg.clip_pretrained, force_quick_gelu=True, cache_dir=str(cfg.root / 'ckpt'))
         self.model = self.model.to(self.device).eval(); self.model.requires_grad_(False)
         self.tokenizer = open_clip.get_tokenizer(cfg.clip_model)
         norm = next((t for t in reversed(self.preprocess.transforms) if hasattr(t, "mean") and hasattr(t, "std")), None)
@@ -599,14 +599,14 @@ class Datasets:
         if self._nih is None:
             root = self.cfg.nih_root
             source = pd.read_csv(root / "Data_Entry_2017.csv", usecols=["Image Index", "Finding Labels"])
-            test = pd.read_csv(root / "NIH_test_data.csv", usecols=["Image Index"])
+            test = (pd.read_csv(root/'NIH_test_data.csv',usecols=['Image Index']) if (root/'NIH_test_data.csv').is_file() else pd.DataFrame({'Image Index':(root/'test_list.txt').read_text().splitlines()}))
             source["Image Index"] = source["Image Index"].astype(str).str.strip()
             names = test["Image Index"].astype(str).str.strip().tolist()
             source = source.set_index("Image Index")
             findings = (source.loc[names, "Finding Labels"].str.replace("_", " ", regex=False)
                         .str.split("|").map(lambda vs: {v.strip() for v in vs}))
             labels = np.column_stack([findings.map(lambda vs: int(c in vs)).to_numpy() for c in NIH_CLASSES])
-            image_map = {p.name: p for p in root.glob("images*/*/*.png")}
+            image_map = {p.name: p for p in root.rglob("*.png")}
             missing = [n for n in names if n not in image_map]
             if missing:
                 raise FileNotFoundError(f"NIH images missing: {missing[:10]}")
@@ -1587,7 +1587,7 @@ class ExperimentOutput:
             raise RuntimeError(f'{self.name}: 저장할 실험 결과가 없습니다.')
         frame = pd.concat(self.tables, ignore_index=True, sort=False)
         csv_path = self.out / f'{self.name}.csv'
-        staging = self.out.parents[2] / 'cache' / 'oblique_cone'
+        staging = ROOT / 'cache' / 'output_staging'
         staging.mkdir(parents=True, exist_ok=True)
         fd, temporary_csv = tempfile.mkstemp(prefix=self.name+'_', suffix='.csv.tmp', dir=staging)
         os.close(fd)
@@ -2033,7 +2033,3 @@ def run_analysis(config=CONFIG, encoders=None):
             if hasattr(encoder,'close'):encoder.close()
     print(f'완료: {ctx.out}',flush=True)
     return ctx.out
-
-
-if __name__=='__main__':
-    run_analysis()

@@ -415,7 +415,3 @@ def main(config=CONFIG, encoder=None):
         print(f'{name}: {value:.3f}', flush=True)
     print(f'완료: {out}', flush=True)
     return dict(output=out, axes=axes, summary=summary)
-
-
-if __name__ == '__main__':
-    main()

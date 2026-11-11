@@ -526,7 +526,3 @@ def run_application(config=APP,encoders=None):
             if hasattr(encoder,'close'):encoder.close()
     print(f'완료: {ctx.out}',flush=True)
     return ctx.out
-
-
-if __name__=='__main__':
-    run_application()
