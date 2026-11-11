@@ -113,7 +113,7 @@ from dataclasses import replace
 import numpy as np
 
 sys.path.insert(0, str(ROOT/'code'/'utils'))
-an = importlib.import_module('1_analysis')
+import encoders as an
 CONFIG = dict(pairs=(('clip','coco'),('clip','nih'),('carzero','coco'),('carzero','nih')),
               batch_size=256, seed=0, image_noise_count=1000, text_noise_each=500)
 
@@ -148,7 +148,7 @@ def dataset_inputs(dataset):
 
 def main():
     (ROOT/'cache').mkdir(exist_ok=True)
-    cfg = replace(an.CONFIG,batch_size=CONFIG['batch_size'])
+    cfg = replace(an.Config(),batch_size=CONFIG['batch_size'])
     for model,dataset in CONFIG['pairs']:
         inputs = dataset_inputs(dataset)
         if model == 'clip':
