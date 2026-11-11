@@ -4,7 +4,6 @@ import sys, importlib
 if hasattr(sys.stdout,"reconfigure"):sys.stdout.reconfigure(encoding="utf-8")
 if hasattr(sys.stderr,"reconfigure"):sys.stderr.reconfigure(encoding="utf-8")
 from dataclasses import replace
-from contextlib import contextmanager
 import numpy as np
 ROOT=next(p for p in Path(__file__).resolve().parents if (p/'code').is_dir() and (p/'third_party').is_dir())
 sys.path.insert(0,str(ROOT/'code'/'old'/'utils'))
@@ -12,6 +11,9 @@ sys.path.insert(0,str(ROOT/'code'/'utils'))
 from build_embedding_cache import load_cache
 from output import workspace
 an=importlib.import_module('1_analysis')
+from coordinate_geometry import CoordinateAxes, geometry_stats
+an.Axes=CoordinateAxes
+an.geometry_stats=geometry_stats
 weights=sorted((ROOT/'ckpt').glob('**/open_clip_model.safetensors'))
 CONFIG=replace(an.CONFIG,clip_model='ViT-B-32-quickgelu',clip_pretrained=str(weights[0] if weights else ROOT/'ckpt/ViT-B-32.pt'))
 
@@ -90,24 +92,7 @@ def capture_figure(output,fig):
     an.plt.close(fig)
 an._capture_figure=capture_figure
 
-def magnitude_figure(folder):
-    import pandas as pd
-    df=pd.read_csv(folder/'magnitude.csv')
-    g=df[df.analysis_type=='components'].groupby(['model','dataset','modality','component'])[['mean_squared_norm','centered_variance']].mean()
-    order=['Rhat','Bhat','E','Delta','cross_Rhat_Bhat']
-    labels=[r'$\alpha\hat r$',r'$\beta\hat b$',r'$e_u$',r'$\delta_u$',r'$\hat r$–$\hat b$ cross term']
-    fig,axes=an.plt.subplots(2,1,figsize=(16,10))
-    for ax,key,title in zip(axes,['mean_squared_norm','centered_variance'],['(a) Mean squared component magnitude','(b) Centered variance and covariance']):
-        frame=g[key].unstack().reindex(columns=order)
-        frame.plot.bar(ax=ax,color=[an.C1,an.C2,an.C4,an.C3,an.MUTED])
-        ax.set(title=title,xlabel='',ylabel='Contribution')
-        ax.set_xticklabels([f'{m.upper()} / {d.upper()} / {t}' for m,d,t in frame.index],rotation=25,ha='right')
-        ax.axhline(0,color=an.MUTED,lw=0.8)
-        ax.legend(ax.containers,labels,ncol=5,loc='upper center',bbox_to_anchor=(0.5,-0.29))
-    fig.tight_layout(h_pad=4)
-    fig.savefig(folder/'magnitude.png',dpi=180,bbox_inches='tight');an.plt.close(fig)
-
-def run(name,steps,config=CONFIG,include_magnitude=False):
+def run(name,steps,config=CONFIG):
     original=an.result_directory
     with workspace('main',name) as work:
         an.result_directory=lambda root,section:work/section
@@ -118,15 +103,6 @@ def run(name,steps,config=CONFIG,include_magnitude=False):
                 with an.ExperimentOutput(ctx.out,label):
                     for fn in functions:
                         method=getattr(an,fn);getattr(method,'__wrapped__',method)(ctx)
-            if include_magnitude:
-                import cached_analysis
-                @contextmanager
-                def staging(group,stem):
-                    folder=work/stem;folder.mkdir();yield folder
-                previous=cached_analysis.workspace;cached_analysis.workspace=staging
-                try:cached_analysis.run_magnitude('new_components',(('clip','coco'),('clip','nih'),('carzero','coco'),('carzero','nih')),config.seeds,config.n_reference)
-                finally:cached_analysis.workspace=previous
-                magnitude_figure(work/'new_components')
         finally:
             an.result_directory=original
             for encoder in ctx._encoders.values():

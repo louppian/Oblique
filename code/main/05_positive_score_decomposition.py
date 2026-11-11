@@ -1,7 +1,7 @@
-"""Outline main analysis. Run directly; one CSV and PNG."""
-from _shared import CONFIG, run
-
-def main():
-    run('05_positive_score_decomposition',(('positive_scores',('_section_a9',)),),CONFIG,include_magnitude=True)
-
-if __name__=='__main__':main()
+"""Positive-score analysis using alpha*rhat + beta*bhat + e + delta."""
+from pathlib import Path
+import sys
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'code'/'utils'))
+from positive_analysis import run
+if __name__=='__main__':run()

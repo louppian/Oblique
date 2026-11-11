@@ -2,6 +2,6 @@
 from _shared import CONFIG, run
 
 def main():
-    run('02_distribution_geometry',(('geometry',('_section_geometry',)),),CONFIG,include_magnitude=False)
+    run('02_distribution_geometry',(('geometry',('_section_geometry',)),),CONFIG)
 
 if __name__=='__main__':main()

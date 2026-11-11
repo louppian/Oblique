@@ -2,6 +2,6 @@
 from _shared import CONFIG, run
 
 def main():
-    run('04_reference_controls',(('controls',('ensure_corruptions','_section_a7')),),CONFIG,include_magnitude=False)
+    run('04_reference_controls',(('controls',('ensure_corruptions','_section_a7')),),CONFIG)
 
 if __name__=='__main__':main()
