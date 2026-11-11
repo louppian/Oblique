@@ -1,0 +1,14 @@
+# Local datasets, checkpoints, and embedding caches (all depths)
+cache/
+ckpt/
+data/
+
+# Python runtime
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local credentials
+.env
+.env.*
+!.env.example
