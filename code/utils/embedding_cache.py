@@ -75,9 +75,8 @@ def build_cache(encoder, model, dataset, image_paths, image_ids, texts, text_ids
                     text_ids=list(map(str,text_ids)), texts=list(texts), noise_texts=list(noise_texts),
                     image_columns={k:np.asarray(v).tolist() for k,v in image_columns.items()},
                     text_columns={k:np.asarray(v).tolist() for k,v in text_columns.items()})
-    token = hashlib.sha256(json.dumps(identity,sort_keys=True,ensure_ascii=False).encode()).hexdigest()[:20]
-    directory = ROOT/'cache'/model/dataset/token
-    metadata = dict(version=1, model=model, dataset=dataset, cache_id=token, settings=metadata)
+    directory = ROOT/'cache'/model/dataset
+    metadata = json.loads(json.dumps(identity, sort_keys=True, ensure_ascii=False))
     for kind in ('image', 'text', 'noise'):
         path = directory/f'{kind}.npz'
         if path.is_file():

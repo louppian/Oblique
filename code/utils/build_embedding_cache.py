@@ -10,7 +10,7 @@ from embedding_cache import ROOT, build_cache, file_identity
 
 sys.path.insert(0, str(ROOT/'code'))
 an = importlib.import_module('1_analysis')
-CONFIG = dict(pairs=(('clip','coco'),('carzero','nih'),('clip','tiny-imagenet-200')),
+CONFIG = dict(pairs=(('clip','coco'),('clip','nih'),('carzero','coco'),('carzero','nih')),
               batch_size=128, seed=0, image_noise_count=1000, text_noise_each=500)
 
 
@@ -38,15 +38,6 @@ def dataset_inputs(dataset):
             ids.extend(f'{sign}_{d}_{t}' for d,t in zip(ds,ts))
         return ([files[n] for n in names],names,texts,ids,dict(labels=labels),
                 dict(disease=diseases,template=templates,polarity=polarity))
-    if dataset == 'tiny-imagenet-200':
-        root = ROOT/'data/tiny-imagenet-200'
-        labels = dict(line.split('\t')[:2] for line in (root/'val/val_annotations.txt').read_text().splitlines())
-        names = sorted(labels)
-        classes = (root/'wnids.txt').read_text().splitlines()
-        words = dict(line.split('\t',1) for line in (root/'words.txt').read_text().splitlines())
-        texts = [f'A photo of {words[c].split(",")[0]}.' for c in classes]
-        return ([root/'val/images'/n for n in names],names,texts,classes,
-                dict(class_id=[labels[n] for n in names]),dict(class_id=classes))
     raise ValueError(dataset)
 
 

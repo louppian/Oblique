@@ -1,21 +1,31 @@
 # Embedding cache
 
-Run from the project root:
+프로젝트 root에서 실행합니다.
 
 ```bash
 python code/utils/build_embedding_cache.py
 ```
 
-Edit CONFIG in that file to select model/dataset pairs. Defaults: CLIP–COCO val2017, CARZero–NIH test, CLIP–Tiny ImageNet validation.
+CLIP·CARZero × COCO·NIH의 2×2 구성입니다.
 
-Output: `cache/<model>/<dataset>/<identity>/image.npz`, `text.npz`, `noise.npz`.
+```text
+cache/
+├── clip/
+│   ├── coco/
+│   └── nih/
+└── carzero/
+    ├── coco/
+    └── nih/
+```
 
-- image: raw/unit embeddings, IDs, relative paths, NIH disease labels or Tiny ImageNet class IDs.
-- text: raw/unit embeddings, IDs and exact strings; COCO image mapping, NIH disease/template/polarity, or Tiny ImageNet class mapping.
-- noise: image_raw/image_unit and text_raw/text_unit, IDs and exact noise text. Image noise is uniform RGB; text rows are random characters then random words. Seed and counts are stored in metadata.
+각 데이터셋 폴더에 image.npz, text.npz, noise.npz를 저장합니다. 총 12개 파일입니다.
 
-Identity includes checkpoint SHA256, encoder settings, ordered input IDs and texts, image file sizes/mtimes, labels and noise settings. Matching files are reused. NPZ writes are atomic and uncompressed. Read with `load_cache` or `numpy.load(..., allow_pickle=False)`.
+- image.npz: 정규화 전·후 이미지 임베딩, 이미지 ID, root 상대경로, NIH 라벨.
+- text.npz: 정규화 전·후 텍스트 임베딩, ID, 실제 문장, COCO 이미지 대응 또는 NIH 질환·문형·극성.
+- noise.npz: 이미지 노이즈와 텍스트 노이즈의 정규화 전·후 임베딩, ID, 실제 노이즈 문장.
 
-CLIP uses local `ckpt/**/open_clip_model.safetensors` or `ckpt/ViT-B-32.pt`, with QuickGELU. CARZero uses `ckpt/best_model.ckpt` and `third_party/BI_MCQ`. The dataset manifest is prepared independently for each dataset. Existing inference adapters are loaded from `code/1_analysis.py`.
+COCO는 val2017 전체 이미지와 캡션, NIH는 기존 NIH_test_data.csv 목록과 14개 질환 × 10개 문형 × 긍정·부정 문장을 사용합니다. 이미지 노이즈는 uniform RGB, 텍스트 노이즈는 무작위 문자 다음 무작위 단어 순서입니다.
 
-NIH text contains 14 diseases × 10 templates × positive/negative polarity. Tiny ImageNet text uses `A photo of <first class synonym>.` for each class. This cache contains global embeddings; reference splits and geometric projections are computed by the experiments using saved IDs.
+파일 내부 metadata에 입력 목록, 모델·가중치 정보, 전처리, 노이즈 seed와 개수를 저장합니다. 동일 조건은 재사용하고 조건이 다른 기존 파일은 경로를 표시하며 중단합니다. 저장은 atomic NPZ이며 읽기는 load_cache 또는 numpy.load(..., allow_pickle=False)를 사용합니다.
+
+CLIP 가중치는 ckpt 아래의 open_clip_model.safetensors 또는 ViT-B-32.pt를 사용하며 QuickGELU를 적용합니다. CARZero는 ckpt/best_model.ckpt와 third_party/BI_MCQ를 사용합니다. 인코더 추출 함수는 기존 code/1_analysis.py를 사용합니다.
