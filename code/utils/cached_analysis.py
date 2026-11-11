@@ -84,7 +84,7 @@ def run_magnitude(name,pairs,seeds,n_reference):
 def metrics(y,score):
     y=np.asarray(y,dtype=bool);p=y.sum();n=len(y)-p;pred=score>0
     auc=float((rankdata(score)[y].sum()-p*(p+1)/2)/(p*n)) if p and n else float('nan')
-    tp=np.sum(y&pred);tn=np.sum(~y&~pred);fp=np.sum(~y&pred);fn=np.sum(y&~pred)
+    tp=int(np.sum(y&pred));tn=int(np.sum(~y&~pred));fp=int(np.sum(~y&pred));fn=int(np.sum(y&~pred))
     denominator=float((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))
     return dict(auc=auc,f1=float(2*tp/(2*tp+fp+fn)) if 2*tp+fp+fn else 0.,
                 mcc=float((tp*tn-fp*fn)/np.sqrt(denominator)) if denominator else 0.,threshold=0.,
