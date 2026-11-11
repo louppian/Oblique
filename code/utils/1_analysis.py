@@ -467,11 +467,22 @@ def load_carzero_model(cfg: Config, device: str):
     if str(repo) not in sys.path:
         sys.path.insert(0, str(repo))
     from CARZero import builder
+    from CARZero.models import transformer_backbones
+    original_load_weight = transformer_backbones.load_weight
+    def load_pretrain(model, path):
+        resolved = cfg.carzero_weight_root / Path(path).name
+        weights = torch.load(str(resolved if resolved.is_file() else path), map_location="cpu", weights_only=False)
+        model.load_state_dict(transformer_backbones.update_weights(model, weights["state_dict"]))
+        return model
     prev = Path.cwd()
     try:
         os.chdir(cfg.carzero_weight_root)
         ckpt = torch.load(str(cfg.carzero_weight_root / cfg.carzero_ckpt), map_location="cpu", weights_only=False)
-        model = builder.build_CARZero_dqn_wo_self_atten_mlp_gl_model(ckpt["hyper_parameters"])
+        transformer_backbones.load_weight = load_pretrain
+        try:
+            model = builder.build_CARZero_dqn_wo_self_atten_mlp_gl_model(ckpt["hyper_parameters"])
+        finally:
+            transformer_backbones.load_weight = original_load_weight
         expected = model.state_dict(); fixed = {}
         for k, v in ckpt["state_dict"].items():
             new_key = k
