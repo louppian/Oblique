@@ -131,7 +131,8 @@ def dataset_inputs(dataset):
         import pandas as pd
         root = ROOT/'data/NIH'
         ann = pd.read_csv(root/'Data_Entry_2017.csv').set_index('Image Index')
-        names = pd.read_csv(root/'NIH_test_data.csv')['Image Index'].astype(str).str.strip().tolist()
+        names = (pd.read_csv(root/'NIH_test_data.csv')['Image Index'].astype(str).str.strip().tolist()
+                 if (root/'NIH_test_data.csv').is_file() else (root/'test_list.txt').read_text().splitlines())
         files = {p.name:p for p in root.rglob('*.png')}
         labels = np.asarray([[int(c in str(ann.loc[n,'Finding Labels']).replace('_',' ').split('|'))
                               for c in an.NIH_CLASSES] for n in names],dtype=np.uint8)
