@@ -1,0 +1,11 @@
+﻿analysis,table,encoder,measurement,family,actual_mean,actual_ci_low,actual_ci_high,null_mean,null_abs_q975,tail_fraction_max_over_seeds,n_null_per_seed
+04_reference_controls/controls,tab7_null_summary,clip,partial_spearman_h_vs_severity_given_c,gaussian,-0.956,-0.962,-0.948,0.020,0.761,0.001,1000
+04_reference_controls/controls,tab7_null_summary,clip,partial_spearman_h_vs_severity_given_c,blur,-0.893,-0.911,-0.877,0.028,0.750,0.001,1000
+04_reference_controls/controls,tab7_null_summary,clip,partial_spearman_h_vs_severity_given_c,patch_shuffle,-0.879,-0.886,-0.869,-0.003,0.645,0.001,1000
+04_reference_controls/controls,tab7_null_summary,clip,partial_spearman_h_vs_severity_given_c,phase,-0.951,-0.954,-0.948,-0.012,0.794,0.001,1000
+04_reference_controls/controls,tab7_null_summary,clip,within_c_bin_sd_of_h,clean,0.055,0.053,0.056,0.032,0.038,0.001,1000
+04_reference_controls/controls,tab7_null_summary,carzero,partial_spearman_h_vs_severity_given_c,gaussian,-0.888,-0.899,-0.873,-0.052,0.747,0.001,1000
+04_reference_controls/controls,tab7_null_summary,carzero,partial_spearman_h_vs_severity_given_c,blur,-0.901,-0.912,-0.889,-0.015,0.741,0.001,1000
+04_reference_controls/controls,tab7_null_summary,carzero,partial_spearman_h_vs_severity_given_c,patch_shuffle,-0.802,-0.817,-0.785,-0.003,0.702,0.003,1000
+04_reference_controls/controls,tab7_null_summary,carzero,partial_spearman_h_vs_severity_given_c,phase,-0.547,-0.573,-0.517,-0.029,0.461,0.005,1000
+04_reference_controls/controls,tab7_null_summary,carzero,within_c_bin_sd_of_h,clean,0.038,0.037,0.038,0.015,0.020,0.001,1000

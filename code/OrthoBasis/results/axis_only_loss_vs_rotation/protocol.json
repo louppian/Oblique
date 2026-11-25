@@ -1,0 +1,23 @@
+{
+  "model": "cached CLIP ViT-B/32",
+  "seed": 0,
+  "epochs": 10,
+  "batch": 512,
+  "lr": 0.001,
+  "tau": 0.07,
+  "train_images": 3500,
+  "validation_images": 500,
+  "test_images": 1000,
+  "maps": "two bias-free 512x512 linear layers, identity initialized",
+  "logits": "(Oi Pi ui)^T (Ot Pt ut)/tau; residual norms retained; no output normalization",
+  "loss": "||Oi Bi - Ot Bt||_F^2 + sum ||Om.T Om-I||_F^2",
+  "coefficients": {
+    "task": 0,
+    "basis": 1,
+    "orth": 1
+  },
+  "reference": "means from training images/captions; existing uniform RGB and random text noise cache",
+  "axis_baseline": "image identity; text two proper minimal rotations: mean then transverse noise axis",
+  "selection": "fixed final epoch 10; 350 basis-only optimizer steps; retrieval used for reporting only",
+  "note": "soft basis constraint: transformed own residuals share an exact plane only at zero basis and orth errors"
+}

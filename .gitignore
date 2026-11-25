@@ -12,3 +12,18 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Local embedding arrays and model artifacts
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+
+# Existing oversized four-component result
+/results/main/05_positive_score_decomposition.csv

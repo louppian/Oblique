@@ -1,0 +1,13 @@
+{
+  "N": 112120,
+  "R": 0.7299101097933033,
+  "theta_deg": 81.96773617195205,
+  "correlation_s_rho": -0.44224690498757524,
+  "correlation_noise_cos_rho": 0.17925119339325288,
+  "correlation_c_rho": -0.9780343756474165,
+  "identity_error": 5.273559366969494e-16,
+  "residual_variance_fraction": 0.9622322744219185,
+  "top_pc_residual_energy": 0.9113311790605878,
+  "top_pc_variance_fraction": 0.20408797642330131,
+  "noise_residual_mean": 0.04721243820090397
+}

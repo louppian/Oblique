@@ -1,0 +1,24 @@
+{
+  "image": {
+    "singular_min": 0.9887362718582153,
+    "singular_max": 1.0108510255813599,
+    "singular_rms_deviation": 0.0027504200115799904,
+    "plane_leak_fro": 0.024187305942177773,
+    "orth_fro": 0.12494208663702011
+  },
+  "text": {
+    "singular_min": 0.9870297312736511,
+    "singular_max": 1.0101640224456787,
+    "singular_rms_deviation": 0.002761591924354434,
+    "plane_leak_fro": 0.024187304079532623,
+    "orth_fro": 0.12532292306423187
+  },
+  "I2T": {
+    "lost": 157,
+    "gained": 97
+  },
+  "T2I": {
+    "lost": 574,
+    "gained": 395
+  }
+}

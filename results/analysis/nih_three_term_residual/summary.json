@@ -1,0 +1,9 @@
+{
+  "mean_noise_cosine": 0.06202688992188559,
+  "mean_noise_angle_deg": 86.44383820953298,
+  "energy_reconstruction_max_error": 1.4432899320127035e-15,
+  "reference": "training images only",
+  "n_noise": 1000,
+  "noise": "Gaussian mean=0.5 std=0.2 clipped to [0,1], uint8",
+  "seed": 0
+}

@@ -1,0 +1,1 @@
+Original CARZero; grayscale Gaussian noise replicated across RGB channels

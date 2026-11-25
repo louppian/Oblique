@@ -1,0 +1,28 @@
+{
+  "reference": "C=image residual basis; text basis=R.T C, where R is the original exact two-axis rotation",
+  "axis_correspondence_fro": 0.04837592626609603,
+  "transformed_plane_principal_degrees": [
+    0.9761530673919685,
+    2.594040146147475
+  ],
+  "residual_space_principal_max_degrees": 3.1945284701301985e-06,
+  "relative_residual_rotation_fro": 18.82056994848521,
+  "relative_residual_rotation_rms_per_dimension": 0.833388845036357,
+  "relative_residual_trace_mean": 0.6527315164844839,
+  "relative_rotation_eigenangle_mean_degrees": 42.223731661986434,
+  "relative_rotation_eigenangle_max_degrees": 122.19499367037717,
+  "reference_basis_column_angle_mean_degrees": 49.20596268138234,
+  "residual_image_singular_range": [
+    0.9892939521701604,
+    1.0104001564006264
+  ],
+  "residual_text_singular_range": [
+    0.9873333232589062,
+    1.0095471876895217
+  ],
+  "common_plane_residual_leak": 4.5234311782382797e-10,
+  "test_pair_cosine_axis_mean": 0.31081836063529955,
+  "test_pair_cosine_learned_mean": 0.4315434880531104,
+  "image_plane_leak_relative_norm_mean": 0.021851126158440985,
+  "text_plane_leak_relative_norm_mean": 0.024552499632011747
+}

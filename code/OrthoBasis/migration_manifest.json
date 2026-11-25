@@ -1,0 +1,337 @@
+[
+  {
+    "source": "results\\analysis\\axis_only_loss_vs_rotation\\comparison.csv",
+    "destination": "results\\axis_only_loss_vs_rotation\\comparison.csv",
+    "sha256": "8cee99f677805790580ce22f5d78a9d4e13db6eacf029f405c951e43463860fe"
+  },
+  {
+    "source": "results\\analysis\\axis_only_loss_vs_rotation\\comparison.png",
+    "destination": "results\\axis_only_loss_vs_rotation\\comparison.png",
+    "sha256": "101ea29f6233bdbbba272fe9fdfc72a97b58eef283147abb6e7129b36f5badf4"
+  },
+  {
+    "source": "results\\analysis\\axis_only_loss_vs_rotation\\maps.pt",
+    "destination": "results\\axis_only_loss_vs_rotation\\maps.pt",
+    "sha256": "90816cd847a7dc84812491c5ae151f6ae6a317e423d815635dde31e425b893b2"
+  },
+  {
+    "source": "results\\analysis\\axis_only_loss_vs_rotation\\protocol.json",
+    "destination": "results\\axis_only_loss_vs_rotation\\protocol.json",
+    "sha256": "d2faf6bfe4320d82a9352e8b44d41939c30ffece45951565a35c4b7b85bbd16e"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\comparison.csv",
+    "destination": "results\\coco_shared_residual_30\\comparison.csv",
+    "sha256": "2a16fe5b8feef62f4154546cb4b94b82e78ca945d2d3c9959dd479359f2612e6"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\comparison.png",
+    "destination": "results\\coco_shared_residual_30\\comparison.png",
+    "sha256": "15e6046d210cc74c754e9d50353bd3cd0067b41f6511a7fcca8d2cda0c93b8bd"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\maps.pt",
+    "destination": "results\\coco_shared_residual_30\\maps.pt",
+    "sha256": "fba148f742fcbcde10aea6735351d6a3a71943a121b171b8406e3a2b33e2ac9a"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\protocol.json",
+    "destination": "results\\coco_shared_residual_30\\protocol.json",
+    "sha256": "0c16aae92e946cd14990b1183d1a148b9df17ea8e09f954fa3769e62c249b050"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\test_residual_direction_comparison.csv",
+    "destination": "results\\coco_shared_residual_30\\test_residual_direction_comparison.csv",
+    "sha256": "7f44f4798dc0d2549d96a193230d5caafeb76361514beb5cde1074bf936a6c17"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\test_residual_norms.csv",
+    "destination": "results\\coco_shared_residual_30\\test_residual_norms.csv",
+    "sha256": "87bf2073e86ae4f05270af3dbc1d497c09c01d10b64a788ff47bc2847a894553"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\test_residual_norms.png",
+    "destination": "results\\coco_shared_residual_30\\test_residual_norms.png",
+    "sha256": "337a6e40bac5c364e7aac6b57b1173317aa726bd36dd985fcdf9d0b926fcedb8"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\test_residual_norm_summary.csv",
+    "destination": "results\\coco_shared_residual_30\\test_residual_norm_summary.csv",
+    "sha256": "2107b9977eecfd763fd2390a0a35c83103a5f48cd37834dc1df1eafad7b54095"
+  },
+  {
+    "source": "results\\analysis\\coco_shared_residual_30\\test_selected_residual_norms.csv",
+    "destination": "results\\coco_shared_residual_30\\test_selected_residual_norms.csv",
+    "sha256": "0ea8063b262ed812e99a4bc2dcdf0f377e5f3a882bd4a60c113618a92a4f1ddd"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\comparison.csv",
+    "destination": "results\\coco_residual_direction_clip_30\\comparison.csv",
+    "sha256": "acc32fa81d1b157681ef4b95b0e8f4d3773ba630f587ab7ebb7299a7312e5efa"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\comparison.png",
+    "destination": "results\\coco_residual_direction_clip_30\\comparison.png",
+    "sha256": "8b2d383efea73da235901f111e0fb2d84cc08713f22e299ff4333fee54ea1a82"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\maps.pt",
+    "destination": "results\\coco_residual_direction_clip_30\\maps.pt",
+    "sha256": "f0b37ba9fbfaadb1e6318af31859faabeba8739e26ec641bd1c1bfdc7abde1fc"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\protocol.json",
+    "destination": "results\\coco_residual_direction_clip_30\\protocol.json",
+    "sha256": "80925043b5383dc0ccaeae0e5e6f7d13c42652a46370d1e17712fb8e5de264c5"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\residual_coordinate_verification.json",
+    "destination": "results\\coco_residual_direction_clip_30\\residual_coordinate_verification.json",
+    "sha256": "b479922c0c006d84ac9e3c3bcce57a635b6722bcfa377394b098d2b047faa78c"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\weight_diagnostics.csv",
+    "destination": "results\\coco_residual_direction_clip_30\\weight_diagnostics.csv",
+    "sha256": "d1f975ea96391cf95e43eeadcdd2fab8a3b88605d5fe05fedd52e631b67bcbdb"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\weight_diagnostics_test_queries.csv",
+    "destination": "results\\coco_residual_direction_clip_30\\weight_diagnostics_test_queries.csv",
+    "sha256": "fd25ee1dd91c0397a1b0f41f559354a053f7754d8fc8444079cb509e7a94bd70"
+  },
+  {
+    "source": "results\\analysis\\coco_residual_direction_clip_30\\weight_geometry.json",
+    "destination": "results\\coco_residual_direction_clip_30\\weight_geometry.json",
+    "sha256": "1008d746b27d9327b61460605c9402897fb5022dd0a20428b42fe1e972c7c695"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_residual_clip_30\\comparison.csv",
+    "destination": "results\\coco_basis_orth_residual_clip_30\\comparison.csv",
+    "sha256": "177b5a8627667bb8eceb26e8eb2753b4b168cfdf0767991ef09c7f383499c404"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_residual_clip_30\\comparison.png",
+    "destination": "results\\coco_basis_orth_residual_clip_30\\comparison.png",
+    "sha256": "dd2bdb4ad742d455f365efac4aef6c657a239b79adc848e46d9e23c5267130dc"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_residual_clip_30\\maps.pt",
+    "destination": "results\\coco_basis_orth_residual_clip_30\\maps.pt",
+    "sha256": "6f9063f4361d907bb95cba9f2fe38bc345c6c6d3a055e215c8df60c416734bec"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_residual_clip_30\\protocol.json",
+    "destination": "results\\coco_basis_orth_residual_clip_30\\protocol.json",
+    "sha256": "003a9809c6d120c2a906af4bae99c95527f3a64edcc9e2e513ac4dee3affc7ea"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_learned_scale_30\\comparison.csv",
+    "destination": "results\\coco_basis_orth_learned_scale_30\\comparison.csv",
+    "sha256": "4f1b7b05ba6b03b5b089138ec807fcd2362a355311899e768c7dd094338c4ff2"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_learned_scale_30\\comparison.png",
+    "destination": "results\\coco_basis_orth_learned_scale_30\\comparison.png",
+    "sha256": "0357d4a68b99867e4083698e123d10a557198a4b160f1572acd2f1154c68a9ef"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_learned_scale_30\\maps.pt",
+    "destination": "results\\coco_basis_orth_learned_scale_30\\maps.pt",
+    "sha256": "c998bea78168eecfbc9b7ce0a3dad392c4aba72319559303f86534476d29dda6"
+  },
+  {
+    "source": "results\\analysis\\coco_basis_orth_learned_scale_30\\protocol.json",
+    "destination": "results\\coco_basis_orth_learned_scale_30\\protocol.json",
+    "sha256": "f76d5581608286f0b2f2821a89d182bf220b6ed86e869b2f88c5d5a693dab066"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\axis_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\axis_I2T_queries.csv",
+    "sha256": "4516305269d6d5c7116a43c1c0b2e68eb5ac4332980a5ca5e3f361d954789af1"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\axis_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\axis_T2I_queries.csv",
+    "sha256": "56607eb73e6973b2092eeed05b363308a74fc7ab80e1e38c2be0348d370b98c1"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\basis_orth_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\basis_orth_I2T_queries.csv",
+    "sha256": "f6df959b8ea30b3ace3790a34c0fad2a63f376a6469eb16212cbe849f20abdab"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\basis_orth_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\basis_orth_T2I_queries.csv",
+    "sha256": "45defdfe41f564b4264b1a6748836b62473870ccd3748b3e11dc9aaf01778833"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\full_orth_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\full_orth_I2T_queries.csv",
+    "sha256": "761a5e3c2dbd5dd046aeadc96176df7f142d6f37ee0a93c5e4e4bbf1a92ed8bd"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\full_orth_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\full_orth_T2I_queries.csv",
+    "sha256": "0fb151feffe2c8ac650230c4564c42a4daa2b8dab96d60cdff8133278b5d8712"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\metrics.csv",
+    "destination": "results\\coco_uncertainty_comparison\\metrics.csv",
+    "sha256": "d1d5e5380e9dcd5fc5d19ed46edddcd3b6da59188731015468dd144a51d2c6ea"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\original_clip_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\original_clip_I2T_queries.csv",
+    "sha256": "5be76f57f81f8051d1b705904ac2b6241e565088202d6cd92e75b343ea8788c3"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\original_clip_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_comparison\\original_clip_T2I_queries.csv",
+    "sha256": "452010497b74c53f6772fd7750072d5cb72bc4e200026756e89bc1bd47208e8d"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\protocol.txt",
+    "destination": "results\\coco_uncertainty_comparison\\protocol.txt",
+    "sha256": "2a0ebd246337035dace16afee17b7810d5b9e0d511ca161fd63e6419a4054f39"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\reliability.png",
+    "destination": "results\\coco_uncertainty_comparison\\reliability.png",
+    "sha256": "690afa4f2b5d5e753122a7b3e3ea01e5f7aaec6629037ab1df9f0fd865eda355"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_comparison\\reliability_bins.csv",
+    "destination": "results\\coco_uncertainty_comparison\\reliability_bins.csv",
+    "sha256": "4adf9ac0169f7e495a31a0be8c2f8843eaf23460682e01c8f7af1999b9059a20"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\axis_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\axis_I2T_queries.csv",
+    "sha256": "06acd0eaea4a6504a33ef8b59d116d95e51fea0a43a91f022e0ba4acc322a2e7"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\axis_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\axis_T2I_queries.csv",
+    "sha256": "8703f6930af4ce93fe6f697b19f27c702c455512fb2ed5a153a47bb25bd308a9"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\basis_orth_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\basis_orth_I2T_queries.csv",
+    "sha256": "e2b76fd1ebae7d30c6b6353f2f12d2ff42c216f00324d375488b27e776eccef0"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\basis_orth_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\basis_orth_T2I_queries.csv",
+    "sha256": "1963b49f12e658871bec3b6324d2d2017e0e4f17b292dcb9b54146f2e820dd72"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\full_orth_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\full_orth_I2T_queries.csv",
+    "sha256": "172425dd46cebfe88e5db5061b45dbdd4583ec5ae25d519d001d6b7ee271602e"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\full_orth_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\full_orth_T2I_queries.csv",
+    "sha256": "c4bc8cd2a51d66cad0689b068a0251444da160b630c11cf9f24359e1afad46de"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\metrics.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\metrics.csv",
+    "sha256": "23fd3f47f9d8b1f891f69c42ffab107884a10eaded806b233917343e630313c8"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\original_clip_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\original_clip_I2T_queries.csv",
+    "sha256": "932e0e60a461a0f942eb8b0eef6e59c2885885d44972411507edf1f574b21f8b"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\original_clip_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\original_clip_T2I_queries.csv",
+    "sha256": "839e7ff2626b7498a4776853b2c540de92197fdd542164af7518aeeda2d9e3e2"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\protocol.txt",
+    "destination": "results\\coco_uncertainty_clip_scale\\protocol.txt",
+    "sha256": "c4267471956970b4b63cd481c5194834ac9d8f09b07e17cbda6b26ad69eac8c1"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\reliability.png",
+    "destination": "results\\coco_uncertainty_clip_scale\\reliability.png",
+    "sha256": "309ed67ff5c43bbbc4666cab8c066185b7b778560d04c5d04936067f6e1c942c"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_clip_scale\\reliability_bins.csv",
+    "destination": "results\\coco_uncertainty_clip_scale\\reliability_bins.csv",
+    "sha256": "cc857a3080dd7c6912e47726142a166b474ea0ad5cf9c9779d444d6e8c1176b9"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\axis_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\axis_I2T_queries.csv",
+    "sha256": "445f09d371406c1535dbf51bb8021319840d1e51c69097d2ff387028eeffe279"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\axis_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\axis_T2I_queries.csv",
+    "sha256": "8703f6930af4ce93fe6f697b19f27c702c455512fb2ed5a153a47bb25bd308a9"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\basis_orth_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\basis_orth_I2T_queries.csv",
+    "sha256": "943a7ca26da63c54d6aff831ce5bcd1aec06b835cbc3b7cf391da256bf59a14b"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\basis_orth_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\basis_orth_T2I_queries.csv",
+    "sha256": "1963b49f12e658871bec3b6324d2d2017e0e4f17b292dcb9b54146f2e820dd72"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\full_orth_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\full_orth_I2T_queries.csv",
+    "sha256": "c8ce9ba88fbf4858a2acb7b459854c2072b63228d542bd08d918a5d657014de8"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\full_orth_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\full_orth_T2I_queries.csv",
+    "sha256": "c4bc8cd2a51d66cad0689b068a0251444da160b630c11cf9f24359e1afad46de"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\learned_scale_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\learned_scale_I2T_queries.csv",
+    "sha256": "69457eb735a75d912b5bc697ed9625445e67039379437fa2a5817c7adf5bf206"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\learned_scale_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\learned_scale_T2I_queries.csv",
+    "sha256": "906f37b19e71d3fa434bb324a8f45b48ec84c43d92f5665e66b7e050625ff0f0"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\metrics.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\metrics.csv",
+    "sha256": "f136ecc862c6ac5fbde9053968d31a6a94173f5dbe08ad46c73a152e21b5bcfa"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\original_clip_I2T_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\original_clip_I2T_queries.csv",
+    "sha256": "a8c58abd5cc9493fc4b09fe6f943e4444e0b000a5bd88072800cf8580ae27e0b"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\original_clip_T2I_queries.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\original_clip_T2I_queries.csv",
+    "sha256": "839e7ff2626b7498a4776853b2c540de92197fdd542164af7518aeeda2d9e3e2"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\protocol.txt",
+    "destination": "results\\coco_uncertainty_learned_scale\\protocol.txt",
+    "sha256": "be273e726a717c99bc3725bf9ebea81f3651feb15e84e9929acd01cbaee6e27a"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\reliability.png",
+    "destination": "results\\coco_uncertainty_learned_scale\\reliability.png",
+    "sha256": "b6023ab13a3161d4d2f93002510a4378055760660ad63b67fb9df8b0e7a9dd74"
+  },
+  {
+    "source": "results\\analysis\\coco_uncertainty_learned_scale\\reliability_bins.csv",
+    "destination": "results\\coco_uncertainty_learned_scale\\reliability_bins.csv",
+    "sha256": "9a3d6eb23b0d04460f2d1f0a0460ccb320ba84ac57b558da2c9bfcdd346689b0"
+  }
+]

@@ -1,6 +1,6 @@
 """Mean/noise coordinates and the orthogonal complement of their plane."""
 import numpy as np
-from geometry import unit, basis, residual
+from geometry import unit, basis
 
 class CoordinateAxes:
     def __init__(self,mean,noise):

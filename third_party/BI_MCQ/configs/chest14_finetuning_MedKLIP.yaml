@@ -1,0 +1,117 @@
+experiment_name: MedKLIP_BiMCQ
+project: MedKLIP_Finetuning_BiMCQ
+name: MedKLIP_BiMCQ
+phase: medklip
+trial_name: null
+freeze:
+  image: false
+  text: false
+  fusion: false
+peft:
+  enabled: false
+  r: 8
+  alpha: 32
+  dropout: 0.1
+  adaptor_name: lora
+lightning:
+  trainer:
+    gpus: 1
+    max_epochs: 1000
+    distributed_backend: ddp
+    gradient_clip_val: 0.25
+    lr: 1.0e-05
+    precision: 16-mixed
+    reload_dataloaders_every_epoch: true
+    val_check_interval: 1.0
+  checkpoint_callback:
+    monitor: val_loss
+    dirpath: ./data/ckpt
+    save_last: true
+    mode: min
+    save_top_k: 1
+  early_stopping_callback:
+    monitor: val_loss
+    min_delta: 0.0
+    patience: 100
+    verbose: false
+    mode: min
+  logger:
+    logger_type: CSVLogger
+    save_dir: ./data/CSV
+model:
+  norm: false
+  MedKLIP:
+    single_path: true
+    d_model: 256
+    res_base_model: resnet50
+    ckpt_path: pretrain_model/MedKLIP_checkpoint_final.pth
+  text:
+    bert_type: emilyalsentzer/Bio_ClinicalBERT
+    last_n_layers: 4
+    aggregate_method: sum
+    norm: false
+    embedding_dim: 768
+    freeze_bert: false
+    agg_tokens: true
+  fusion:
+    d_model: 256
+    H: 4
+    'N': 4
+    dropout: 0.1
+    state_prob: 1
+    class_num: 1
+    decoder_number_layer: 4
+    i2t_average_attn_weights: true
+    t2i_average_attn_weights: true
+data:
+  dataset: pretrain_xh
+  text:
+    word_num: 97
+    captions_per_image: 5
+    full_report: false
+    generate_mcq2: false
+    no_hyb: false
+  image:
+    imsize: 256
+  fewshot:
+    enabled: false
+    ratio: 0.01
+transforms:
+  norm: CXR_MAE
+  random_crop:
+    crop_size: 224
+  random_horizontal_flip: 0.3
+  random_affine:
+    degrees: 30
+    translate:
+    - 0.1
+    - 0.1
+    scale:
+    - 0.9
+    - 1.1
+  color_jitter:
+    bightness:
+    - 0.8
+    - 1.2
+    contrast:
+    - 0.8
+    - 1.2
+train:
+  update_interval: 1000
+  batch_size: 16
+  num_workers: 6
+  nvis: 4
+  rand_vis: false
+  optimizer:
+    name: Adam
+    weight_decay: 1.0e-06
+  scheduler:
+    name: plateau
+    monitor: val_loss
+    interval: epoch
+    frequency: 1
+  seed: 14
+  loss_weight: 0.5
+test:
+  batch_size: 256
+  num_workers: 6
